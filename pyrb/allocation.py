@@ -43,7 +43,7 @@ class Portfolio():
         RC = np.multiply(x, cov * x)
         if scale:
             RC = RC / RC.sum()
-        return np.squeeze(RC)
+        return utils.to_array(RC)
 
     def get_variance(self):
         """
@@ -76,13 +76,19 @@ class Portfolio():
             return np.nan
         else:
             x = self.x
-            cov = self.cov
             x = utils.to_column_matrix(x)
-
         return x.T * self.mu
 
 
 class EqualRiskContribution(Portfolio):
+    """
+    Solve the equal risk contribution problem using cyclical coordinate descent.
+
+    Args:
+        cov: The covariance matrix
+
+    """
+
     def __init__(self, cov):
         Portfolio.__init__(self, cov, None)
 
