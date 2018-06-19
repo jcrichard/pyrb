@@ -21,13 +21,22 @@ Since PyMC3 Models is built on top of scikit-learn, you can use the same methods
     ERC = EqualRiskContribution()
     ERC.solve(cov)
     ERC.get_risk_contribution()
-    ERC.get_vol()
+    ERC.get_volatility()
 
 
 References
 ------------------
 
+>Griveau-Billion, T., Richard, J-C., and Roncalli, T. (2013), A Fast Algorithm for Computing High-dimensional Risk Parity Portfolios, SSRN.
 
+>Maillard, S., Roncalli, T. and
+    Teiletche, J. (2010), The Properties of Equally Weighted Risk Contribution Portfolios,
+    Journal of Portfolio Management, 36(4), pp. 60-70.
+    
+>Richard, J-C., and Roncalli, T. (2015), Smart
+    Beta: Managing Diversification of Minimum Variance Portfolios, in Jurczenko, E. (Ed.),
+    Risk-based and Factor Investing, ISTE Press -- Elsevier.
+    
 License
 ------------------
-`Apache License, Version 2.0 < >`__
+ 
