@@ -16,7 +16,7 @@ Usage
 ------------------
 Since PyMC3 Models is built on top of scikit-learn, you can use the same methods as with a scikit-learn model.
 
-    from pyrb import EqualRiskContribution()
+    from pyrb import EqualRiskContribution
 
     ERC = EqualRiskContribution()
     ERC.solve(cov)
