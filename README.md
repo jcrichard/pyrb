@@ -11,7 +11,12 @@ You can solve
 - Risk budgeting
 - Risk parity with expected return
 
+Installation
+------------------
+ Can be done using ``pip``: 
 
+    pip install git+https://github.com/jcrichard/pyrb
+    
 Usage
 ------------------
 
