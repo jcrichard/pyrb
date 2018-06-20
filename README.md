@@ -41,6 +41,5 @@ References
     Beta: Managing Diversification of Minimum Variance Portfolios, in Jurczenko, E. (Ed.),
     Risk-based and Factor Investing, ISTE Press -- Elsevier.
     
-License
-------------------
+
  
