@@ -1,27 +1,43 @@
-__all__ = ['EqualRiskContribution', 'RiskBudgeting']
-
 import numpy as np
 from . import utils
 from abc import abstractmethod
-from  tolerance import *
+from .settings import *
+from .ccd import solve_rb_ccd
 
 
-class Portfolio():
-    def __init__(self, cov, mu=None):
-        self.n = cov.shape[0]
-        self.x = None
+class Allocation(object):
+    """
+
+    Simple allocation object.
+
+    """
+
+    @property
+    def cov(self):
+        return self.__cov
+
+    @property
+    def mu(self):
+        return self.__mu
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def n(self):
+        return self.__n
+
+    def __init__(self, cov, mu=None, x=None):
+        self.__n = cov.shape[0]
+        self._x = x
+        utils.check_covariance(cov)
         if mu is None:
-            self.mu = np.matrix(np.zeros(self.n)).T
+            self.__mu = np.matrix(np.zeros(self.n)).T
         else:
-            self.mu = np.matrix(mu).T
-        self.mu = utils.to_column_matrix(self.mu)
-        self.cov = np.matrix(cov)
-        if self.cov.shape[0] != self.cov.shape[1]:
-            raise ValueError('The covariance is not squared')
-        if np.isnan(self.cov).sum().sum() > 0:
-            raise ValueError('cov contains missing values')
-        if np.isnan(self.mu).sum() > 0:
-            raise ValueError('mu contains missing values')
+            utils.check_expected_return(mu)
+            self.__mu = utils.to_column_matrix(mu)
+        self.__cov = np.matrix(cov)
 
     @abstractmethod
     def solve(self):
@@ -31,7 +47,7 @@ class Portfolio():
         """
 
         Args:
-            scale: If true the risk contribution sum to 100% otherwise it is portfolio variance.
+            scale: If true the risk contribution sum to 100% otherwise it sums to the portfolio variance.
 
         Returns: The risk contribution of the portfolio: x .* (Cov * x).
 
@@ -80,7 +96,7 @@ class Portfolio():
         return x.T * self.mu
 
 
-class EqualRiskContribution(Portfolio):
+class EqualRiskContribution(Allocation):
     """
     Solve the equal risk contribution problem using cyclical coordinate descent.
 
@@ -90,73 +106,20 @@ class EqualRiskContribution(Portfolio):
     """
 
     def __init__(self, cov):
-        Portfolio.__init__(self, cov, None)
+        Allocation.__init__(self, cov)
 
     def solve(self):
-        Sigma = np.array(self.cov)
-        n = np.shape(Sigma)[0]
-        x0 = np.ones((n, 1)) / n
-        x = x0 * 0
-        var = np.diag(Sigma)
-        Sx = np.matmul(Sigma, x)
-        cvg = False
-
-        iters = 0
-        while not cvg:
-            for i in range(n):
-                alpha = var[i];
-                beta = (Sx[i] - x[i] * var[i])[0]
-                gamma_ = -1.0 / n;
-                x_tilde = (-beta + np.sqrt(beta ** 2 - 4 * alpha * gamma_)) / (2 * alpha);
-                x[i] = x_tilde;
-                Sx = np.matmul(Sigma, x)
-            cvg = np.sum((x / np.sum(x) - x0 / np.sum(x0)) ** 2) <= TOL;
-
-            x0 = x.copy()
-            iters = iters + 1
-            if iters >= MAXITER:
-                self.cvg = "Maximum iteration reached."
-                break
-
-        self.x = utils.to_array(x / x.sum())
+        x = solve_rb_ccd(cov=self.cov)
+        self._x = utils.to_array(x / x.sum())
 
 
-class RiskBudgeting(Portfolio):
+class RiskBudgeting(Allocation):
     def __init__(self, cov, riskbudget):
-        Portfolio.__init__(self, cov, None)
+        Allocation.__init__(self, cov)
+
+        utils.check_risk_budget(riskbudget, self.n)
         self.riskbudget = riskbudget
 
-        if np.isnan(self.riskbudget).sum() > 0:
-            raise ValueError('riskbudget contains missing values')
-        if self.n != len(self.riskbudget):
-            raise ValueError('riskbudget size is not equal to the number of asset.')
-        if np.isnan(riskbudget < BUDGETTOL).sum() > 0:
-            raise ValueError('One of the budget is smaller than {}'.format(BUDGETTOL))
-
     def solve(self):
-        Sigma = np.array(self.cov)
-        n = np.shape(Sigma)[0]
-        x0 = np.ones((n, 1)) / n
-        x = x0 * 0
-        var = np.diag(Sigma)
-        Sx = np.matmul(Sigma, x)
-        cvg = False
-
-        iters = 0
-        while not cvg:
-            for i in range(n):
-                alpha = var[i];
-                beta = (Sx[i] - x[i] * var[i])[0]
-                gamma_ = -1.0 * self.riskbudget[i];
-                x_tilde = (-beta + np.sqrt(beta ** 2 - 4 * alpha * gamma_)) / (2 * alpha);
-                x[i] = x_tilde;
-                Sx = np.matmul(Sigma, x)
-            cvg = np.sum((x / np.sum(x) - x0 / np.sum(x0)) ** 2) <= TOL;
-
-            x0 = x.copy()
-            iters = iters + 1
-            if iters >= MAXITER:
-                self.cvg = "Maximum iteration reached."
-                break
-
-        self.x = np.squeeze(x / x.sum())
+        x = solve_rb_ccd(cov=self.cov, budget=self.riskbudget)
+        self._x = utils.to_array(x / x.sum())
