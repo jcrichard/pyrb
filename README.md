@@ -16,7 +16,8 @@ Installation
  Can be done using ``pip``: 
 
     pip install git+https://github.com/jcrichard/pyrb
-    
+
+
 Usage
 ------------------
 
