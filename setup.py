@@ -10,7 +10,8 @@ URL = "https://github.com/jcrichard/pyrb"
 LICENSE = "Apache License, Version 2.0"
 
 REQUIREMENTS = [
-    "pandas>=0.19"
+    "pandas>=0.19",
+    "quadprog>=0.1.0"
 ]
 
 if __name__ == "__main__":

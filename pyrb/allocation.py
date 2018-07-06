@@ -3,13 +3,11 @@ from . import utils
 from abc import abstractmethod
 from .settings import *
 from .ccd import solve_rb_ccd
-
+import scipy.optimize as optimize
 
 class Allocation(object):
     """
-
     Simple allocation object.
-
     """
 
     @property
@@ -45,12 +43,10 @@ class Allocation(object):
 
     def get_risk_contributions(self, scale=True):
         """
-
         Args:
             scale: If true the risk contribution sum to 100% otherwise it sums to the portfolio variance.
 
         Returns: The risk contribution of the portfolio: x .* (Cov * x).
-
         """
         x = self.x
         cov = self.cov
@@ -63,9 +59,7 @@ class Allocation(object):
 
     def get_variance(self):
         """
-
         Returns: The portfolio variance: x.T * Cov * x.
-
         """
         x = self.x
         cov = self.cov
@@ -76,17 +70,13 @@ class Allocation(object):
 
     def get_volatility(self):
         """
-
         Returns: The portfolio volatility: sqrt(x.T * Cov * x.)
-
         """
         return self.get_variance() ** 0.5
 
     def get_expected_return(self):
         """
-
         Returns: The portfolio expected return: x.T * mu
-
         """
         if self.mu is None:
             return np.nan
@@ -99,10 +89,8 @@ class Allocation(object):
 class EqualRiskContribution(Allocation):
     """
     Solve the equal risk contribution problem using cyclical coordinate descent.
-
     Args:
         cov: The covariance matrix
-
     """
 
     def __init__(self, cov):
@@ -114,7 +102,12 @@ class EqualRiskContribution(Allocation):
 
 
 class RiskBudgeting(Allocation):
+    """
+    Solve the risk contribution problem using cyclical coordinate descent.
+    """
+
     def __init__(self, cov, riskbudget):
+
         Allocation.__init__(self, cov)
 
         utils.check_risk_budget(riskbudget, self.n)
@@ -123,3 +116,37 @@ class RiskBudgeting(Allocation):
     def solve(self):
         x = solve_rb_ccd(cov=self.cov, budget=self.riskbudget)
         self._x = utils.to_array(x / x.sum())
+
+class RiskBudgetingWithER(RiskBudgeting):
+
+    def __init__(self, cov, riskbudget = None, mu = None, c = 1):
+        RiskBudgeting.__init__(self, cov, riskbudget)
+        if mu is not None:
+            utils.check_expected_return(mu, self.n)
+            self.mu = mu
+            self.c = c
+
+    def solve(self):
+        x = solve_rb_ccd(cov=self.cov, budget=self.riskbudget, mu= self.mu)
+        self._x = utils.to_array(x / x.sum())
+
+class ConstrainedRiskBudgeting(RiskBudgetingWithER):
+    def __init__(self, cov, riskbudget, mu, c=0, C=None, d=None, bounds=None):
+        RiskBudgetingWithER.__init__(self, cov=cov, riskbudget=riskbudget, mu=mu, c=c)
+        self.d = d
+        self.C = C
+        self.bounds = bounds
+
+    def _sum_to_one_constraint(self, lamdba):
+        x = self._lambda_solve(lamdba)
+        sum_x = sum(x)
+        return sum_x - 1
+
+    def _lambda_solve(self, lamdba):
+        x = solve_rb_ccd(self.cov, self.riskbudget, self.mu, self.c, self.C, self.d, self.bounds, lamdba)
+        return x
+
+    def solve(self):
+        lamdba_star = optimize.bisect(self._sum_to_one_constraint, 0, 10000000000, maxiter=MAXITER_BISECTION)
+        self.lamdba_star = lamdba_star
+        self._x = self._lambda_solve(lamdba_star)
