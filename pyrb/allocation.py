@@ -15,12 +15,12 @@ class Allocation(object):
         return self.__cov
 
     @property
-    def mu(self):
-        return self.__mu
-
-    @property
     def x(self):
         return self._x
+
+    @property
+    def mu(self):
+        return self.__mu
 
     @property
     def n(self):
@@ -30,11 +30,11 @@ class Allocation(object):
         self.__n = cov.shape[0]
         self._x = x
         utils.check_covariance(cov)
-        if mu is None:
-            self.__mu = np.matrix(np.zeros(self.n)).T
+        utils.check_expected_return(mu, self.n)
+        if mu is not None:
+            self.__mu = utils.to_column_matrix(mu, self.n)
         else:
-            utils.check_expected_return(mu)
-            self.__mu = utils.to_column_matrix(mu)
+            self.__mu = None
         self.__cov = np.matrix(cov)
 
     @abstractmethod
@@ -109,7 +109,6 @@ class RiskBudgeting(Allocation):
     def __init__(self, cov, riskbudget):
 
         Allocation.__init__(self, cov)
-
         utils.check_risk_budget(riskbudget, self.n)
         self.riskbudget = riskbudget
 
@@ -119,12 +118,12 @@ class RiskBudgeting(Allocation):
 
 class RiskBudgetingWithER(RiskBudgeting):
 
+
     def __init__(self, cov, riskbudget = None, mu = None, c = 1):
         RiskBudgeting.__init__(self, cov, riskbudget)
-        if mu is not None:
-            utils.check_expected_return(mu, self.n)
-            self.mu = mu
-            self.c = c
+        utils.check_expected_return(mu, self.n)
+        self._mu = mu
+        self.c = c
 
     def solve(self):
         x = solve_rb_ccd(cov=self.cov, budget=self.riskbudget, mu= self.mu)
