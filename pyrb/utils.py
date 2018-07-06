@@ -12,10 +12,8 @@ def to_column_matrix(x):
     else:
         raise ValueError("x is not a vector")
 
-
 def to_array(x):
     return np.squeeze(np.asarray(x))
-
 
 def check_covariance(cov):
     if cov.shape[0] != cov.shape[1]:
@@ -24,12 +22,17 @@ def check_covariance(cov):
         raise ValueError('The covariance matrix contains missing values')
 
 
-def check_expected_return(mu):
+def check_expected_return(mu, n):
+    if mu is None:
+        return
+    if n != len(mu):
+        raise ValueError('Expected returns vector size is not equal to the number of asset.')
     if np.isnan(mu).sum() > 0:
         raise ValueError('The expected returns vector contains missing values')
 
-
 def check_risk_budget(riskbudgets, n):
+    if riskbudgets is None:
+        return
     if np.isnan(riskbudgets).sum() > 0:
         raise ValueError('Risk budget contains missing values')
     if n != len(riskbudgets):
@@ -38,7 +41,6 @@ def check_risk_budget(riskbudgets, n):
         raise ValueError(
             'One of the budget is smaller than {}. If you want a risk budget of 0 please remove the asset.'.format(
                 RISK_BUDGET_TOL))
-
 
 def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None, bounds=None):
     n = P.shape[0]
