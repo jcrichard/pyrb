@@ -3,7 +3,6 @@ from . import utils
 from .settings import *
 import logging
 
-
 def solve_rb_ccd(cov, budget = None, mu = None, c=None, C = None, d = None, bounds = None, lambda_log = 1):
     """
 
@@ -21,7 +20,7 @@ def solve_rb_ccd(cov, budget = None, mu = None, c=None, C = None, d = None, boun
     Sigma = np.array(cov)
     n = np.shape(Sigma)[0]
 
-    if c is None:
+    if (c is None) | (mu is None):
         c = 0
         mu = np.zeros((n, 1))
 
@@ -32,7 +31,7 @@ def solve_rb_ccd(cov, budget = None, mu = None, c=None, C = None, d = None, boun
         bounds = np.matrix([[RISK_BUDGET_TOL] * n, [1] * n]).T
 
     x0 = np.ones((n, 1)) / n
-    x = x0 * 0
+    x = x0 / 100
     var = np.diag(Sigma)
     Sx = np.matmul(Sigma, x)
     cvg = False
