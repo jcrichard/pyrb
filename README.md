@@ -23,8 +23,8 @@ Usage
 
     from pyrb import EqualRiskContribution
 
-    ERC = EqualRiskContribution()
-    ERC.solve(cov)
+    ERC = EqualRiskContribution(cov)
+    ERC.solve()
     ERC.get_risk_contribution()
     ERC.get_volatility()
 
