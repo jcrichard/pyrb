@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 DISTNAME = "pyrb"
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 DESCRIPTION = """pyrb is a Python library to solve risk bugeting problem."""
 LONG_DESCRIPTION = """pyrb is a Python library to solve risk bugeting problem."""
 AUTHOR = "Jean-Charles Richard"
@@ -11,6 +11,7 @@ LICENSE = "Apache License, Version 2.0"
 
 REQUIREMENTS = [
     "pandas>=0.19",
+    "numba>=0.4",
     "quadprog>=0.1.0"
 ]
 
@@ -30,7 +31,6 @@ if __name__ == "__main__":
         zip_safe=False,
         install_requires=REQUIREMENTS,
         classifiers=[
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.4'
         ]
     )

@@ -1,9 +1,10 @@
-import numpy as np
 import quadprog
-from .settings import RISK_BUDGET_TOL
+
+import numpy as np
 
 
 def to_column_matrix(x):
+    """Return x as a matrix columns."""
     x = np.matrix(x)
     if x.shape[1] != 1:
         x = x.T
@@ -14,42 +15,15 @@ def to_column_matrix(x):
 
 
 def to_array(x):
-    if (len(x.shape)) == 1:
+    """Turn a columns or row matrix to an array."""
+    if x is None:
+        return None
+    elif (len(x.shape)) == 1:
         return x
+
     if x.shape[1] != 1:
         x = x.T
     return np.squeeze(np.asarray(x))
-
-
-def check_covariance(cov):
-    if cov.shape[0] != cov.shape[1]:
-        raise ValueError('The covariance matrix is not squared')
-    if np.isnan(cov).sum().sum() > 0:
-        raise ValueError('The covariance matrix contains missing values')
-
-
-def check_expected_return(mu, n):
-    if mu is None:
-        return
-    if n != len(mu):
-        raise ValueError(
-            'Expected returns vector size is not equal to the number of asset.')
-    if np.isnan(mu).sum() > 0:
-        raise ValueError('The expected returns vector contains missing values')
-
-
-def check_risk_budget(riskbudgets, n):
-    if riskbudgets is None:
-        return
-    if np.isnan(riskbudgets).sum() > 0:
-        raise ValueError('Risk budget contains missing values')
-    if n != len(riskbudgets):
-        raise ValueError(
-            'Risk budget size is not equal to the number of asset.')
-    if all(v < RISK_BUDGET_TOL for v in riskbudgets):
-        raise ValueError(
-            'One of the budget is smaller than {}. If you want a risk budget of 0 please remove the asset.'.format(
-                RISK_BUDGET_TOL))
 
 
 def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None, bounds=None):

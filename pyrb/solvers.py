@@ -1,10 +1,10 @@
-import numpy as np
-from . import utils
-from .settings import CCD_COVERGENCE_TOL, MAX_ITER, MAX_WEIGHT, ADMM_TOL
 import logging
-from .utils import quadprog_solve_qp, proximal_polyhedra
-import random
+
 import numba
+import numpy as np
+
+from . import tools
+from .settings import CCD_COVERGENCE_TOL, MAX_ITER, MAX_WEIGHT, ADMM_TOL
 
 
 @numba.njit
@@ -125,10 +125,10 @@ def solve_rb_ccd(
     x = 1 / np.diag(cov) ** 0.5 / (np.sum(1 / np.diag(cov) ** 0.5))
     x0 = x / 100
 
-    budgets = utils.to_array(budgets)
-    pi = utils.to_array(pi)
+    budgets = tools.to_array(budgets)
+    pi = tools.to_array(pi)
     var = np.array(np.diag(cov))
-    Sx = utils.to_array(np.dot(cov, x))
+    Sx = tools.to_array(np.dot(cov, x))
     sigma_x = np.sqrt(np.dot(Sx, x))
 
     cvg = False
@@ -145,7 +145,7 @@ def solve_rb_ccd(
                 "Maximum iteration reached during the CCD descent: {}".format(MAX_ITER))
             break
 
-    return utils.to_array(x)
+    return tools.to_array(x)
 
 
 def solve_rb_admm_qp(
@@ -201,14 +201,14 @@ def solve_rb_admm_qp(
     u = np.zeros(len(x))
     cvg = False
     iters = 0
-    pi_vec = utils.to_array(pi)
+    pi_vec = tools.to_array(pi)
     identity_matrix = np.identity(n)
 
     while not cvg:
 
         # x-update
-        x = quadprog_solve_qp(c * cov + _varphi * identity_matrix, pi_vec +
-                              _varphi * (z - u), G=C, h=d, bounds=bounds)
+        x = tools.quadprog_solve_qp(c * cov + _varphi * identity_matrix, pi_vec +
+                                    _varphi * (z - u), G=C, h=d, bounds=bounds)
 
         # z-update
         z = proximal_log(_varphi, (x + u) * _varphi, -lambda_log, budgets)
@@ -234,7 +234,7 @@ def solve_rb_admm_qp(
         # parameters update
         _varphi, u = accelarate(_varphi, r, s, u)
 
-    return utils.to_array(x)
+    return tools.to_array(x)
 
 
 def solve_rb_admm_ccd(
@@ -279,7 +279,7 @@ def solve_rb_admm_ccd(
     u = np.zeros(len(x))
     cvg = False
     iters = 0
-    pi_vec = utils.to_array(pi)
+    pi_vec = tools.to_array(pi)
     while not cvg:
 
         # x-update
@@ -292,7 +292,7 @@ def solve_rb_admm_ccd(
                          _varphi=_varphi)
 
         # z-update
-        z = proximal_polyhedra(
+        z = tools.proximal_polyhedra(
             x + u,
             C,
             d,
@@ -321,4 +321,4 @@ def solve_rb_admm_ccd(
         # parameters update
         _varphi, u = accelarate(_varphi, r, s, u)
 
-    return utils.to_array(x)
+    return tools.to_array(x)

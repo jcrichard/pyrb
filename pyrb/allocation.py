@@ -1,10 +1,13 @@
-import numpy as np
 import logging
-from . import utils
-from .settings import BISECTION_UPPER_BOUND, MAXITER_BISECTION
-from .solver import solve_rb_ccd, solve_rb_admm_qp, solve_rb_admm_ccd
-import scipy.optimize as optimize
 from abc import abstractmethod
+
+import numpy as np
+import scipy.optimize as optimize
+
+from . import tools
+from . import validation
+from .settings import BISECTION_UPPER_BOUND, MAXITER_BISECTION
+from .solvers import solve_rb_ccd, solve_rb_admm_qp, solve_rb_admm_ccd
 
 
 class RiskBudgetAllocation:
@@ -25,7 +28,7 @@ class RiskBudgetAllocation:
     def n(self):
         return self.__n
 
-    def __init__(self, cov, pi=None):
+    def __init__(self, cov, pi=None, x=None):
         """
         Base class for Risk Budgeting Allocation.
 
@@ -36,14 +39,16 @@ class RiskBudgetAllocation:
         x: asset allocation.
         """
         self.__n = cov.shape[0]
-        x = np.array([np.nan] * self.n)
+        if x is None:
+            x = np.array([np.nan] * self.n)
         self._x = x
-        utils.check_covariance(cov)
-        utils.check_expected_return(pi, self.n)
-        if pi is not None:
-            self.__pi = utils.to_column_matrix(pi)
-        else:
-            self.__pi = None
+        validation.check_covariance(cov)
+
+        if pi is None:
+            pi = np.array([0] * self.n)
+        validation.check_expected_return(pi, self.n)
+        self.__pi = tools.to_column_matrix(pi)
+
         self.__cov = np.array(cov)
         self.lambda_star = np.nan
 
@@ -61,10 +66,10 @@ class RiskBudgetAllocation:
         """Get the portfolio variance: x.T * cov * x."""
         x = self.x
         cov = self.cov
-        x = utils.to_column_matrix(x)
+        x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
         RC = np.multiply(x, cov * x)
-        return np.sum(utils.to_array(RC))
+        return np.sum(tools.to_array(RC))
 
     def get_volatility(self):
         """Get the portfolio volatility: x.T * cov * x."""
@@ -76,7 +81,7 @@ class RiskBudgetAllocation:
             return np.nan
         else:
             x = self.x
-            x = utils.to_column_matrix(x)
+            x = tools.to_column_matrix(x)
         return float(x.T * self.pi)
 
     def __str__(self):
@@ -92,7 +97,7 @@ class RiskBudgetAllocation:
                          np.round(self.x.sum() * 100, 4))
 
 
-class EqualRiskContribution(Allocation):
+class EqualRiskContribution(RiskBudgetAllocation):
     def __init__(self, cov):
         """
         Solve the equal risk contribution problem using cyclical coordinate descent. Although this does not change
@@ -103,25 +108,25 @@ class EqualRiskContribution(Allocation):
         cov: The covariance matrix
         """
 
-        Allocation.__init__(self, cov)
+        RiskBudgetAllocation.__init__(self, cov)
 
     def solve(self):
         x = solve_rb_ccd(cov=self.cov)
-        self._x = utils.to_array(x / x.sum())
+        self._x = tools.to_array(x / x.sum())
         self.lambda_star = self.get_volatility()
 
     def get_risk_contributions(self, scale=True):
         x = self.x
         cov = self.cov
-        x = utils.to_column_matrix(x)
+        x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
         RC = np.multiply(x, cov * x) / self.get_volatility()
         if scale:
             RC = RC / RC.sum()
-        return utils.to_array(RC)
+        return tools.to_array(RC)
 
 
-class RiskBudgeting(Allocation):
+class RiskBudgeting(RiskBudgetAllocation):
 
     def __init__(self, cov, budgets):
         """
@@ -133,27 +138,27 @@ class RiskBudgeting(Allocation):
         cov: the covariance matrix.
         budgets: array of risk budget.
         """
-        Allocation.__init__(self, cov=cov)
-        utils.check_risk_budget(budgets, self.n)
+        RiskBudgetAllocation.__init__(self, cov=cov)
+        validation.check_risk_budget(budgets, self.n)
         self.budgets = budgets
 
     def solve(self):
         x = solve_rb_ccd(cov=self.cov, budgets=self.budgets)
-        self._x = utils.to_array(x / x.sum())
+        self._x = tools.to_array(x / x.sum())
         self.lambda_star = self.get_volatility()
 
     def get_risk_contributions(self, scale=True):
         x = self.x
         cov = self.cov
-        x = utils.to_column_matrix(x)
+        x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
         RC = np.multiply(x, cov * x) / self.get_volatility()
         if scale:
             RC = RC / RC.sum()
-        return utils.to_array(RC)
+        return tools.to_array(RC)
 
 
-class RiskBudgetingWithER(Allocation):
+class RiskBudgetingWithER(RiskBudgetAllocation):
 
     def __init__(self, cov, budgets=None, pi=None, c=1):
         """
@@ -167,25 +172,25 @@ class RiskBudgetingWithER(Allocation):
         pi: array of expected excess return.
         c: risk aversion paramter.
         """
-        Allocation.__init__(self, cov=cov, pi=pi)
-        utils.check_risk_budget(budgets, self.n)
+        RiskBudgetAllocation.__init__(self, cov=cov, pi=pi)
+        validation.check_risk_budget(budgets, self.n)
         self.budgets = budgets
         self.c = c
 
     def solve(self):
         x = solve_rb_ccd(cov=self.cov, budgets=self.budgets, pi=self.pi)
-        self._x = utils.to_array(x / x.sum())
+        self._x = tools.to_array(x / x.sum())
         self.lambda_star = -self.get_expected_return() + self.get_volatility() * self.c
 
     def get_risk_contributions(self, scale=True):
         x = self.x
         cov = self.cov
-        x = utils.to_column_matrix(x)
+        x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
         RC = np.multiply(x, cov * x) / self.get_volatility() * self.c - self.x * self.pi
         if scale:
             RC = RC / RC.sum()
-        return utils.to_array(RC)
+        return tools.to_array(RC)
 
     def __str__(self):
         return super().__str__() + \
@@ -200,6 +205,8 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         self.d = d
         self.C = C
         self.bounds = bounds
+        validation.check_bounds(bounds, self.n)
+        validation.check_constraints(C, d, self.n)
         self.solver = solver
 
     def __str__(self):
@@ -242,14 +249,14 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
     def get_risk_contributions(self, scale=True):
         x = self.x
         cov = self.cov
-        x = utils.to_column_matrix(x)
+        x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
 
         if self.solver == "admm_qp":
             RC = np.multiply(x, cov * x) * self.c - self.x * self.pi
         else:
-            RC = np.multiply(x, cov * x).T / self.get_volatility() * self.c - utils.to_array(self.x.T) * utils.to_array(
+            RC = np.multiply(x, cov * x).T / self.get_volatility() * self.c - tools.to_array(self.x.T) * tools.to_array(
                 self.pi)
         if scale:
             RC = RC / RC.sum()
-        return utils.to_array(RC)
+        return tools.to_array(RC)
