@@ -1,1 +1,2 @@
-from .allocation import EqualRiskContribution, RiskBudgeting, Allocation, RiskBudgetingWithER, ConstrainedRiskBudgeting
+from .allocation import EqualRiskContribution, RiskBudgeting, RiskBudgetAllocation, RiskBudgetingWithER, \
+    ConstrainedRiskBudgeting
