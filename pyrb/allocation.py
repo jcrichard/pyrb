@@ -229,7 +229,7 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
             bounds=None,
             solver="admm_ccd"):
         """
-        Solve the constrained risk budgeting problem. It supports linear inequality and bounds constraints.
+        Solve the constrained risk budgeting problem. It supports linear inequality (Cx <= d) and bounds constraints.
 
 
         Parameters
@@ -273,10 +273,16 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         validation.check_bounds(bounds, self.n)
         validation.check_constraints(C, d, self.n)
         self.solver = solver
+        if (self.solver == "admm_qp") and (self.pi is not None):
+            logging.warning(
+                "The solver is set to 'admm_qp'. The risk measure is the mean variance in this case. The optimal "
+                "solution will not be the same than 'admm_ccd' when pi is not zero.     ")
 
     def __str__(self):
         if self.C is not None:
-            return super().__str__() + \
+            return "solver: {}\n".format(self.solver)+\
+                   "----------------------------\n"+\
+                   super().__str__() + \
                 "C@x: {}\n".format(self.C @ self.x)
         else:
             return super().__str__()
@@ -297,8 +303,6 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
                 lamdba)
             self.solver = "ccd"
         elif self.solver == "admm_qp":
-            logging.warning(
-                "The solver is set to 'admm_qp'. The risk measure is the mean variance in this case.")
             x = solve_rb_admm_qp(cov=self.cov,
                                  budgets=self.budgets,
                                  pi=self.pi,
@@ -359,7 +363,7 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         cov = np.matrix(cov)
 
         if self.solver == "admm_qp":
-            RC = np.multiply(x, cov * x) * self.c - self.x * self.pi
+            RC = np.multiply(x, cov * x)  -  self.c* self.x * self.pi
         else:
             RC = np.multiply(x, cov * x).T / self.get_volatility() * \
                 self.c - tools.to_array(self.x.T) * tools.to_array(self.pi)

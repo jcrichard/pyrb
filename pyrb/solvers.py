@@ -174,7 +174,7 @@ def solve_rb_admm_qp(
         _varphi=1):
     """
     Solve the constrained risk budgeting constraint for the Mean Variance risk measure:
-    The risk measure is given by R(x) = c * x^T cov x -  pi^T x
+    The risk measure is given by R(x) =  x^T cov x - c * pi^T x
 
     Parameters
     ----------
@@ -213,7 +213,6 @@ def solve_rb_admm_qp(
 
     """
 
-
     def proximal_log(a, b, c, budgets):
         delta = b * b - 4 * a * c * budgets
         x = (b + np.sqrt(delta)) / (2 * a)
@@ -227,6 +226,9 @@ def solve_rb_admm_qp(
         bounds[:, 1] = MAX_WEIGHT
     else:
         bounds = np.array(bounds * 1.0)
+
+    if budgets is None:
+        budgets = np.array([1.0 / n] * n)
 
     x0 = 1 / np.diag(cov) / (np.sum(1 / np.diag(cov)))
 
@@ -242,10 +244,10 @@ def solve_rb_admm_qp(
     while not cvg:
 
         # x-update
-        x = tools.quadprog_solve_qp(c *
+        x = tools.quadprog_solve_qp(
                                     cov +
                                     _varphi *
-                                    identity_matrix, pi_vec +
+                                    identity_matrix, c *pi_vec +
                                     _varphi *
                                     (z -
                                      u), G=C, h=d, bounds=bounds)

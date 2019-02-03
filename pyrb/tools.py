@@ -33,14 +33,15 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None, bounds=None):
         I = np.eye(n)
         LB = -I
         UB = I
-    if G is None:
-        G = np.vstack([LB, UB])
-        h = np.array(
-            np.hstack([-to_array(bounds[:, 0]), to_array(bounds[:, 1])]))
-    else:
-        G = np.vstack([G, LB, UB])
-        h = np.array(
-            np.hstack([h, -to_array(bounds[:, 0]), to_array(bounds[:, 1])]))
+        if G is None:
+            G = np.vstack([LB, UB])
+            h = np.array(
+                np.hstack([-to_array(bounds[:, 0]), to_array(bounds[:, 1])]))
+        else:
+            G = np.vstack([G, LB, UB])
+            h = np.array(
+                np.hstack([h, -to_array(bounds[:, 0]), to_array(bounds[:, 1])]))
+
     qp_a = q  # because  1/2 x^T G x - a^T x
     qp_G = P
     if A is not None:
