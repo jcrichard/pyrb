@@ -27,7 +27,8 @@ def check_constraints(C, d, n):
         raise ValueError(
             'Number of columns of C is not equal to the number of asset.')
     if len(d) != C.shape[0]:
-        raise ValueError('Number of rows of C is not equal to the length  of d.')
+        raise ValueError(
+            'Number of rows of C is not equal to the length  of d.')
 
 
 def check_bounds(bounds, n):
@@ -37,7 +38,8 @@ def check_bounds(bounds, n):
         raise ValueError(
             'The number of rows of the bounds array is not equal to the number of asset.')
     if 2 != bounds.shape[1]:
-        raise ValueError('The number of columns the bounds array should be equal to two (min and max bounds).')
+        raise ValueError(
+            'The number of columns the bounds array should be equal to two (min and max bounds).')
 
 
 def check_risk_budget(riskbudgets, n):

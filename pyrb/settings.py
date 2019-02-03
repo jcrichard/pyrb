@@ -1,4 +1,4 @@
-# algorithm tolerence
+# algorithm tolerance
 CCD_COVERGENCE_TOL = 1e-10
 BISECTION_TOL = 1e-5
 ADMM_TOL = 1e-12

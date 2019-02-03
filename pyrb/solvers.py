@@ -86,17 +86,31 @@ def solve_rb_ccd(
 
     Parameters
     ----------
-    cov: The covariance matrix of the asset (annualized).
-    budgets: Target risk budgets.
-    pi: Expected returns. None by default.
-    c: Volatility multiplier.
-    bounds: Array of bounds for the optimal allocation.
-    lambda_log: Log penalty parameter.
-    _varphi: This parameters is only useful for solving ADMM-CCD algorithm should be zeros otherwise.
+    cov : array, shape (n, n)
+        Covariance matrix of the returns.
+
+    budgets : array, shape (n,)
+        Risk budgets for each asset (the default is None which implies equal risk budget).
+
+    pi : array, shape (n,)
+        Expected excess return for each asset (the default is None which implies 0 for each asset).
+
+    c : float
+        Risk aversion parameter equals to one by default.
+
+    bounds : array, shape (n, 2)
+        Array of minimum and maximum bounds. If None the default bounds are [0,1].
+
+    lambda_log : float
+        Log penalty parameter.
+
+    _varphi : float
+        This parameters is only useful for solving ADMM-CCD algorithm should be zeros otherwise.
 
     Returns
     -------
-    The array of optimal solution.
+    x : aray shape(n,)
+        The array of optimal solution.
 
     """
 
@@ -161,23 +175,44 @@ def solve_rb_admm_qp(
     """
     Solve the constrained risk budgeting constraint for the Mean Variance risk measure:
     The risk measure is given by R(x) = c * x^T cov x -  pi^T x
+
     Parameters
     ----------
-    cov: covariance matrix of the assets
-    budgets: risk budget associated to each asset. If None the model assumes equal risk contribution.
-    pi: expected risk premia (mu - r) in each asset. If None the model assumes pi = 0.
-    c: risk aversion parameter
-    C: matrix of inequality constraints. If None the model is unconstraint.
-    d: vector of inequality constraints
-    bounds: bounds for each asset. If None the model is assumes x in [0,1].
-    lambda_log: log penalty parameter.
-    _varphi: admm solver parameter.
+    cov : array, shape (n, n)
+        Covariance matrix of the returns.
+
+    budgets : array, shape (n,)
+        Risk budgets for each asset (the default is None which implies equal risk budget).
+
+    pi : array, shape (n,)
+        Expected excess return for each asset (the default is None which implies 0 for each asset).
+
+    c : float
+        Risk aversion parameter equals to one by default.
+
+    C : array, shape (p, n)
+        Array of p inequality constraints. If None the problem is unconstrained and solved using CCD
+        (algorithm 3) and it solves equation (17).
+
+    d : array, shape (p,)
+        Array of p constraints that matches the inequalities.
+
+    bounds : array, shape (n, 2)
+        Array of minimum and maximum bounds. If None the default bounds are [0,1].
+
+    lambda_log : float
+        Log penalty parameter.
+
+    _varphi : float
+        This parameters is only useful for solving ADMM-CCD algorithm should be zeros otherwise.
 
     Returns
     -------
-    The vector of optimal allocation.
+    x : aray shape(n,)
+        The array of optimal solution.
 
     """
+
 
     def proximal_log(a, b, c, budgets):
         delta = b * b - 4 * a * c * budgets
@@ -207,8 +242,13 @@ def solve_rb_admm_qp(
     while not cvg:
 
         # x-update
-        x = tools.quadprog_solve_qp(c * cov + _varphi * identity_matrix, pi_vec +
-                                    _varphi * (z - u), G=C, h=d, bounds=bounds)
+        x = tools.quadprog_solve_qp(c *
+                                    cov +
+                                    _varphi *
+                                    identity_matrix, pi_vec +
+                                    _varphi *
+                                    (z -
+                                     u), G=C, h=d, bounds=bounds)
 
         # z-update
         z = proximal_log(_varphi, (x + u) * _varphi, -lambda_log, budgets)
@@ -253,19 +293,41 @@ def solve_rb_admm_ccd(
 
     Parameters
     ----------
-    cov: covariance matrix of the assets
-    budgets: risk budget associated to each asset. If None the model assumes equal risk contribution.
-    pi: expected risk premia (mu - r) in each asset. If None the model assumes pi = 0.
-    c: risk aversion parameter
-    C: matrix of inequality constraints. If None the model is unconstraint.
-    d: vector of inequality constraints
-    bounds: bounds for each asset. If None the model is assumes x in [0,1].
-    lambda_log: log penalty parameter.
-    _varphi: admm solver parameter.
+    Parameters
+    ----------
+    cov : array, shape (n, n)
+        Covariance matrix of the returns.
+
+    budgets : array, shape (n,)
+        Risk budgets for each asset (the default is None which implies equal risk budget).
+
+    pi : array, shape (n,)
+        Expected excess return for each asset (the default is None which implies 0 for each asset).
+
+    c : float
+        Risk aversion parameter equals to one by default.
+
+    C : array, shape (p, n)
+        Array of p inequality constraints. If None the problem is unconstrained and solved using CCD
+        (algorithm 3) and it solves equation (17).
+
+    d : array, shape (p,)
+        Array of p constraints that matches the inequalities.
+
+    bounds : array, shape (n, 2)
+        Array of minimum and maximum bounds. If None the default bounds are [0,1].
+
+    lambda_log : float
+        Log penalty parameter.
+
+    _varphi : float
+        This parameters is only useful for solving ADMM-CCD algorithm should be zeros otherwise.
 
     Returns
     -------
-    The vector of optimal allocation.
+    x : aray shape(n,)
+        The array of optimal solution.
+
 
     """
 
