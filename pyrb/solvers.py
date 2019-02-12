@@ -245,12 +245,12 @@ def solve_rb_admm_qp(
 
         # x-update
         x = tools.quadprog_solve_qp(
-                                    cov +
-                                    _varphi *
-                                    identity_matrix, c *pi_vec +
-                                    _varphi *
-                                    (z -
-                                     u), G=C, h=d, bounds=bounds)
+            cov +
+            _varphi *
+            identity_matrix, c * pi_vec +
+            _varphi *
+            (z -
+             u), G=C, h=d, bounds=bounds)
 
         # z-update
         z = proximal_log(_varphi, (x + u) * _varphi, -lambda_log, budgets)

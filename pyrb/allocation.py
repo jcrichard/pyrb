@@ -230,7 +230,7 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
             solver="admm_ccd"):
         """
         Solve the constrained risk budgeting problem. It supports linear inequality (Cx <= d) and bounds constraints.
-
+        Notations follow the paper Constrained Risk Budgeting Portfolios by Richard J-C. and Roncalli T. (2019).
 
         Parameters
         ----------
@@ -257,10 +257,8 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
             Array of minimum and maximum bounds. If None the default bounds are [0,1].
 
         solver : basestring
-            "admm_ccd" (default): standard deviation risk measure + linear constraints. The algorithm is ADMM_CCD
-                (algorithm 4) and it solves equation (14).
-            "admm_qp" : mean variance risk measure + linear constraints. The algorithm is ADMM_QP and it
-                solves equation (15).
+            "admm_ccd" (default): generalized standard deviation-based risk measure + linear constraints. The algorithm is ADMM_CCD (algorithm 4) and it solves equation (14).
+            "admm_qp" : mean variance risk measure + linear constraints. The algorithm is ADMM_QP and it solves equation (15).
 
         """
 
@@ -280,8 +278,8 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
 
     def __str__(self):
         if self.C is not None:
-            return "solver: {}\n".format(self.solver)+\
-                   "----------------------------\n"+\
+            return "solver: {}\n".format(self.solver) +\
+                   "----------------------------\n" +\
                    super().__str__() + \
                 "C@x: {}\n".format(self.C @ self.x)
         else:
@@ -363,7 +361,7 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         cov = np.matrix(cov)
 
         if self.solver == "admm_qp":
-            RC = np.multiply(x, cov * x)  -  self.c* self.x * self.pi
+            RC = np.multiply(x, cov * x) - self.c * self.x * self.pi
         else:
             RC = np.multiply(x, cov * x).T / self.get_volatility() * \
                 self.c - tools.to_array(self.x.T) * tools.to_array(self.pi)
