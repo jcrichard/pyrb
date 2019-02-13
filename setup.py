@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 DISTNAME = "pyrb"
 VERSION = '1.0.1'
-DESCRIPTION = """pyrb is a Python library to solve risk bugeting problem."""
-LONG_DESCRIPTION = """pyrb is a Python library to solve risk bugeting problem."""
+DESCRIPTION = """pyrb is a Python library to solve constrained risk budgeting problem."""
+LONG_DESCRIPTION = """pyrb is a Python library to solve constrained risk budgeting problem."""
 AUTHOR = "Jean-Charles Richard"
 AUTHOR_EMAIL = "jcharles.richard@gmail.com"
 URL = "https://github.com/jcrichard/pyrb"
