@@ -7,9 +7,8 @@ with generalized standard deviation-based risk measure:
 <a href="https://www.codecogs.com/eqnedit.php?latex=R(x)&space;=&space;-&space;\pi^T&space;x&space;&plus;&space;c&space;\sqrt{&space;x^T&space;\Sigma&space;x}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?R(x)&space;=&space;-&space;\pi^T&space;x&space;&plus;&space;c&space;\sqrt{&space;x^T&space;\Sigma&space;x}" title="R(x) = - \pi^T x + c \sqrt{ x^T \Sigma x}" /></a>
 
 
-This formulation encompasses Gaussian value-at-risk and Gaussian expected shortfall and the volatility.
+This formulation encompasses Gaussian value-at-risk and Gaussian expected shortfall and the volatility. The algorithm supports bounds constraints and inequality constraints. It is is efficient for large dimension and suitable for backtesting. 
 
-The algorithm is efficient for large dimension and suitable for backtesting.
 A description can be found in [*Constrained Risk Budgeting Portfolios: Theory, Algorithms, Applications & Puzzles*](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3331184)
 by Jean-Charles Richard and Thierry Roncalli.
 
