@@ -34,7 +34,7 @@ Usage
 
     ERC = EqualRiskContribution(cov)
     ERC.solve()
-    ERC.get_risk_contribution()
+    ERC.get_risk_contributions()
     ERC.get_volatility()
 
 
