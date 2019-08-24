@@ -2,4 +2,4 @@ Cython==0.26.1
 numba==0.44.0
 numpy==1.15.4
 pandas==0.19
-quadprog==0.1.0
+quadprog==0.1.6
