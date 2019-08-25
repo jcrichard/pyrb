@@ -1,5 +1,10 @@
-Constrained and Unconstrained Risk budgeting allocation in Python
+Constrained and Unconstrained Risk Budgeting Allocation in Python
 ================
+
+[![Build Status](https://travis-ci.org/jcrichard/pyrb.svg?branch=master)](https://travis-ci.org/jcrichard/pyrb)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 This repository contains the code for solving constrained risk budgeting
 with generalized standard deviation-based risk measure:

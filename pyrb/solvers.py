@@ -38,18 +38,7 @@ def accelarate(_varphi, r, s, u, alpha=10, tau=2):
 
 
 @numba.njit
-def _cycle(
-        x,
-        c,
-        var,
-        _varphi,
-        sigma_x,
-        Sx,
-        budgets,
-        pi,
-        bounds,
-        lambda_log,
-        cov):
+def _cycle(x, c, var, _varphi, sigma_x, Sx, budgets, pi, bounds, lambda_log, cov):
     """
     Internal numba function for computing one cycle of the CCD algorithm.
 
@@ -59,8 +48,7 @@ def _cycle(
         alpha = c * var[i] + _varphi * sigma_x
         beta = c * (Sx[i] - x[i] * var[i]) - pi[i] * sigma_x
         gamma_ = -lambda_log * budgets[i] * sigma_x
-        x_tilde = (-beta + np.sqrt(beta ** 2 - 4 *
-                                   alpha * gamma_)) / (2 * alpha)
+        x_tilde = (-beta + np.sqrt(beta ** 2 - 4 * alpha * gamma_)) / (2 * alpha)
 
         x_tilde = np.maximum(np.minimum(x_tilde, bounds[i, 1]), bounds[i, 0])
 
@@ -71,13 +59,8 @@ def _cycle(
 
 
 def solve_rb_ccd(
-        cov,
-        budgets=None,
-        pi=None,
-        c=1.0,
-        bounds=None,
-        lambda_log=1.0,
-        _varphi=0.0):
+    cov, budgets=None, pi=None, c=1.0, bounds=None, lambda_log=1.0, _varphi=0.0
+):
     """
     Solve the risk budgeting problem for standard deviation risk-based measure with bounds constraints using cyclical
     coordinate descent (CCD). It is corresponding to solve equation (17) in the paper.
@@ -123,7 +106,7 @@ def solve_rb_ccd(
         bounds = np.array(bounds * 1.0)
 
     if budgets is None:
-        budgets = (np.array([1] * n) / n)
+        budgets = np.array([1] * n) / n
     else:
         budgets = np.array(budgets)
     budgets = budgets / np.sum(budgets)
@@ -150,28 +133,31 @@ def solve_rb_ccd(
 
     while not cvg:
         x, Sx, sigma_x = _cycle(
-            x, c, var, _varphi, sigma_x, Sx, budgets, pi, bounds, lambda_log, cov)
+            x, c, var, _varphi, sigma_x, Sx, budgets, pi, bounds, lambda_log, cov
+        )
         cvg = np.sum(np.array(x - x0) ** 2) <= CCD_COVERGENCE_TOL
         x0 = x.copy()
         iters = iters + 1
         if iters >= MAX_ITER:
             logging.info(
-                "Maximum iteration reached during the CCD descent: {}".format(MAX_ITER))
+                "Maximum iteration reached during the CCD descent: {}".format(MAX_ITER)
+            )
             break
 
     return tools.to_array(x)
 
 
 def solve_rb_admm_qp(
-        cov,
-        budgets=None,
-        pi=None,
-        c=None,
-        C=None,
-        d=None,
-        bounds=None,
-        lambda_log=1,
-        _varphi=1):
+    cov,
+    budgets=None,
+    pi=None,
+    c=None,
+    C=None,
+    d=None,
+    bounds=None,
+    lambda_log=1,
+    _varphi=1,
+):
     """
     Solve the constrained risk budgeting constraint for the Mean Variance risk measure:
     The risk measure is given by R(x) =  x^T cov x - c * pi^T x
@@ -245,12 +231,12 @@ def solve_rb_admm_qp(
 
         # x-update
         x = tools.quadprog_solve_qp(
-            cov +
-            _varphi *
-            identity_matrix, c * pi_vec +
-            _varphi *
-            (z -
-             u), G=C, h=d, bounds=bounds)
+            cov + _varphi * identity_matrix,
+            c * pi_vec + _varphi * (z - u),
+            G=C,
+            h=d,
+            bounds=bounds,
+        )
 
         # z-update
         z = proximal_log(_varphi, (x + u) * _varphi, -lambda_log, budgets)
@@ -258,7 +244,7 @@ def solve_rb_admm_qp(
         # u-update
         r = x - z
         s = _varphi * (z - zprev)
-        u += (x - z)
+        u += x - z
 
         # convergence check
         cvg1 = sum((x - x0) ** 2)
@@ -280,15 +266,16 @@ def solve_rb_admm_qp(
 
 
 def solve_rb_admm_ccd(
-        cov,
-        budgets=None,
-        pi=None,
-        c=None,
-        C=None,
-        d=None,
-        bounds=None,
-        lambda_log=1,
-        _varphi=1):
+    cov,
+    budgets=None,
+    pi=None,
+    c=None,
+    C=None,
+    d=None,
+    bounds=None,
+    lambda_log=1,
+    _varphi=1,
+):
     """
     Solve the constrained risk budgeting constraint for the standard deviation risk measure:
     The risk measure is given by R(x) = c * sqrt(x^T cov x) -  pi^T x
@@ -347,27 +334,23 @@ def solve_rb_admm_ccd(
     while not cvg:
 
         # x-update
-        x = solve_rb_ccd(cov,
-                         budgets=budgets,
-                         pi=pi_vec + (_varphi * (z - u)),
-                         bounds=bounds,
-                         lambda_log=lambda_log,
-                         c=c,
-                         _varphi=_varphi)
+        x = solve_rb_ccd(
+            cov,
+            budgets=budgets,
+            pi=pi_vec + (_varphi * (z - u)),
+            bounds=bounds,
+            lambda_log=lambda_log,
+            c=c,
+            _varphi=_varphi,
+        )
 
         # z-update
-        z = tools.proximal_polyhedra(
-            x + u,
-            C,
-            d,
-            A=None,
-            b=None,
-            bound=bounds)
+        z = tools.proximal_polyhedra(x + u, C, d, A=None, b=None, bound=bounds)
 
         # u-update
         r = x - z
         s = _varphi * (z - zprev)
-        u += (x - z)
+        u += x - z
 
         # convergence check
         cvg1 = sum((x - x0) ** 2)

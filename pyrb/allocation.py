@@ -11,7 +11,6 @@ from .solvers import solve_rb_ccd, solve_rb_admm_qp, solve_rb_admm_ccd
 
 
 class RiskBudgetAllocation:
-
     @property
     def cov(self):
         return self.__cov
@@ -91,16 +90,19 @@ class RiskBudgetAllocation:
         return float(x.T * self.pi)
 
     def __str__(self):
-        return ('solution x: {}\n'
-                'lambda star: {}\n'
-                'risk contributions: {}\n'
-                'sigma(x): {}\n'
-                'sum(x): {}\n'
-                ).format(np.round(self.x * 100, 4),
-                         np.round(self.lambda_star * 100, 4),
-                         np.round(self.get_risk_contributions() * 100, 4),
-                         np.round(self.get_volatility() * 100, 4),
-                         np.round(self.x.sum() * 100, 4))
+        return (
+            "solution x: {}\n"
+            "lambda star: {}\n"
+            "risk contributions: {}\n"
+            "sigma(x): {}\n"
+            "sum(x): {}\n"
+        ).format(
+            np.round(self.x * 100, 4),
+            np.round(self.lambda_star * 100, 4),
+            np.round(self.get_risk_contributions() * 100, 4),
+            np.round(self.get_volatility() * 100, 4),
+            np.round(self.x.sum() * 100, 4),
+        )
 
 
 class EqualRiskContribution(RiskBudgetAllocation):
@@ -135,7 +137,6 @@ class EqualRiskContribution(RiskBudgetAllocation):
 
 
 class RiskBudgeting(RiskBudgetAllocation):
-
     def __init__(self, cov, budgets):
         """
         Solve the risk budgeting problem using cyclical coordinate descent. Although this does not change
@@ -171,7 +172,6 @@ class RiskBudgeting(RiskBudgetAllocation):
 
 
 class RiskBudgetingWithER(RiskBudgetAllocation):
-
     def __init__(self, cov, budgets=None, pi=None, c=1):
         """
         Solve the risk budgeting problem for the standard deviation risk measure using cyclical coordinate descent.
@@ -206,28 +206,29 @@ class RiskBudgetingWithER(RiskBudgetAllocation):
         cov = self.cov
         x = tools.to_column_matrix(x)
         cov = np.matrix(cov)
-        RC = np.multiply(x, cov * x) / self.get_volatility() * \
-            self.c - self.x * self.pi
+        RC = np.multiply(x, cov * x) / self.get_volatility() * self.c - self.x * self.pi
         if scale:
             RC = RC / RC.sum()
         return tools.to_array(RC)
 
     def __str__(self):
-        return super().__str__() + \
-            "mu(x): {}\n".format(np.round(self.get_expected_return() * 100, 4))
+        return super().__str__() + "mu(x): {}\n".format(
+            np.round(self.get_expected_return() * 100, 4)
+        )
 
 
 class ConstrainedRiskBudgeting(RiskBudgetingWithER):
     def __init__(
-            self,
-            cov,
-            budgets=None,
-            pi=None,
-            c=1,
-            C=None,
-            d=None,
-            bounds=None,
-            solver="admm_ccd"):
+        self,
+        cov,
+        budgets=None,
+        pi=None,
+        c=1,
+        C=None,
+        d=None,
+        bounds=None,
+        solver="admm_ccd",
+    ):
         """
         Solve the constrained risk budgeting problem. It supports linear inequality (Cx <= d) and bounds constraints.
         Notations follow the paper Constrained Risk Budgeting Portfolios by Richard J-C. and Roncalli T. (2019).
@@ -262,8 +263,7 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
 
         """
 
-        RiskBudgetingWithER.__init__(
-            self, cov=cov, budgets=budgets, pi=pi, c=c)
+        RiskBudgetingWithER.__init__(self, cov=cov, budgets=budgets, pi=pi, c=c)
 
         self.d = d
         self.C = C
@@ -274,14 +274,17 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         if (self.solver == "admm_qp") and (self.pi is not None):
             logging.warning(
                 "The solver is set to 'admm_qp'. The risk measure is the mean variance in this case. The optimal "
-                "solution will not be the same than 'admm_ccd' when pi is not zero.     ")
+                "solution will not be the same than 'admm_ccd' when pi is not zero.     "
+            )
 
     def __str__(self):
         if self.C is not None:
-            return "solver: {}\n".format(self.solver) +\
-                   "----------------------------\n" +\
-                   super().__str__() + \
-                "C@x: {}\n".format(self.C @ self.x)
+            return (
+                "solver: {}\n".format(self.solver)
+                + "----------------------------\n"
+                + super().__str__()
+                + "C@x: {}\n".format(self.C @ self.x)
+            )
         else:
             return super().__str__()
 
@@ -291,33 +294,35 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         return sum_x - 1
 
     def _lambda_solve(self, lamdba):
-        if self.C is None:  # it is optimal to take the CCD in case of separable constraints
+        if (
+            self.C is None
+        ):  # it is optimal to take the CCD in case of separable constraints
             x = solve_rb_ccd(
-                self.cov,
-                self.budgets,
-                self.pi,
-                self.c,
-                self.bounds,
-                lamdba)
+                self.cov, self.budgets, self.pi, self.c, self.bounds, lamdba
+            )
             self.solver = "ccd"
         elif self.solver == "admm_qp":
-            x = solve_rb_admm_qp(cov=self.cov,
-                                 budgets=self.budgets,
-                                 pi=self.pi,
-                                 c=self.c,
-                                 C=self.C,
-                                 d=self.d,
-                                 bounds=self.bounds,
-                                 lambda_log=lamdba)
+            x = solve_rb_admm_qp(
+                cov=self.cov,
+                budgets=self.budgets,
+                pi=self.pi,
+                c=self.c,
+                C=self.C,
+                d=self.d,
+                bounds=self.bounds,
+                lambda_log=lamdba,
+            )
         elif self.solver == "admm_ccd":
-            x = solve_rb_admm_ccd(cov=self.cov,
-                                  budgets=self.budgets,
-                                  pi=self.pi,
-                                  c=self.c,
-                                  C=self.C,
-                                  d=self.d,
-                                  bounds=self.bounds,
-                                  lambda_log=lamdba)
+            x = solve_rb_admm_ccd(
+                cov=self.cov,
+                budgets=self.budgets,
+                pi=self.pi,
+                c=self.c,
+                C=self.C,
+                d=self.d,
+                bounds=self.bounds,
+                lambda_log=lamdba,
+            )
         return x
 
     def solve(self):
@@ -326,15 +331,17 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
                 self._sum_to_one_constraint,
                 0,
                 BISECTION_UPPER_BOUND,
-                maxiter=MAXITER_BISECTION)
+                maxiter=MAXITER_BISECTION,
+            )
             self.lambda_star = lambda_star
             self._x = self._lambda_solve(lambda_star)
         except Exception as e:
-            if e.args[0] == 'f(a) and f(b) must have different signs':
+            if e.args[0] == "f(a) and f(b) must have different signs":
                 logging.exception(
-                    "Bisection failed: " +
-                    str(e) +
-                    ". If you are using expected returns the parameter 'c' need to be correctly scaled (see remark 1 in the paper). Otherwise please check the constraints or increase the bisection upper bound.")
+                    "Bisection failed: "
+                    + str(e)
+                    + ". If you are using expected returns the parameter 'c' need to be correctly scaled (see remark 1 in the paper). Otherwise please check the constraints or increase the bisection upper bound."
+                )
             else:
                 logging.exception("Problem not solved: " + str(e))
 
@@ -363,8 +370,13 @@ class ConstrainedRiskBudgeting(RiskBudgetingWithER):
         if self.solver == "admm_qp":
             RC = np.multiply(x, cov * x) - self.c * self.x * self.pi
         else:
-            RC = np.multiply(x, cov * x).T / self.get_volatility() * \
-                self.c - tools.to_array(self.x.T) * tools.to_array(self.pi)
+            RC = np.multiply(
+                x, cov * x
+            ).T / self.get_volatility() * self.c - tools.to_array(
+                self.x.T
+            ) * tools.to_array(
+                self.pi
+            )
         if scale:
             RC = RC / RC.sum()
 
