@@ -1,2 +1,2 @@
 numba==0.44.0
-quadprog==0.1.6
+quadprog==0.1.7
