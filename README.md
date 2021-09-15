@@ -1,7 +1,7 @@
 Constrained and Unconstrained Risk Budgeting Allocation in Python
 ================
 
-[![Build Status](https://travis-ci.org/jcrichard/pyrb.svg?branch=master)](https://travis-ci.org/jcrichard/pyrb)
+[![Actions Status](https://github.com/jcrichard/pyrb/workflows/Python%20application/badge.svg)](https://github.com/jcrichard/pyrb/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
