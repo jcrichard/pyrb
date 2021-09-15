@@ -37,7 +37,7 @@ def accelarate(_varphi, r, s, u, alpha=10, tau=2):
     return _varphi, u
 
 
-@numba.jit('Tuple((float64[:], float64[:], float64))(float64[:], float64, float64[:], float64, float64, float64[:], float64[:], int32[:], float64[:,:], float64, float64[:,:])',
+@numba.jit('Tuple((float64[:], float64[:], float64))(float64[:], float64, float64[:], float64, float64, float64[:], float64[:], float64[:], float64[:,:], float64, float64[:,:])',
       nopython=True)
 def _cycle(x, c, var, _varphi, sigma_x, Sx, budgets, pi, bounds, lambda_log, cov):
     """
