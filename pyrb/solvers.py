@@ -51,7 +51,7 @@ def _cycle(x, c, var, _varphi, sigma_x, Sx, budgets, pi, bounds, lambda_log, cov
         gamma_ = -lambda_log * budgets[i] * sigma_x
         x_tilde = (-beta + np.sqrt(beta ** 2 - 4 * alpha * gamma_)) / (2 * alpha)
 
-        x_tilde = np.maximum(np.minimum(x_tilde, bounds[i, 1]), bounds[i, 0])
+        x_tilde = np.maximum(np.minimum(x_tilde, bounds[i, 1.0]), bounds[i, 0.0])
 
         x[i] = x_tilde
         Sx = np.dot(cov, x)
@@ -114,7 +114,7 @@ def solve_rb_ccd(
 
     if (c is None) | (pi is None):
         c = 1.0
-        pi = np.array([0] * n)
+        pi = np.array([0.0] * n)
     else:
         c = float(c)
         pi = np.array(pi).astype(float)
