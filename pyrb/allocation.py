@@ -50,7 +50,7 @@ class RiskBudgetAllocation:
         validation.check_covariance(cov)
 
         if pi is None:
-            pi = np.array([0] * self.n)
+            pi = np.array([0.0] * self.n)
         validation.check_expected_return(pi, self.n)
         self.__pi = tools.to_column_matrix(pi)
 
