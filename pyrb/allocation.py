@@ -197,7 +197,7 @@ class RiskBudgetingWithER(RiskBudgetAllocation):
         self.c = c
 
     def solve(self):
-        x = solve_rb_ccd(cov=self.cov, budgets=self.budgets, pi=self.pi)
+        x = solve_rb_ccd(cov=self.cov, budgets=self.budgets, pi=self.pi, c=self.c)
         self._x = tools.to_array(x / x.sum())
         self.lambda_star = -self.get_expected_return() + self.get_volatility() * self.c
 
