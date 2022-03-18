@@ -48,6 +48,8 @@ def check_risk_budget(riskbudgets, n):
         return
     if np.isnan(riskbudgets).sum() > 0:
         raise ValueError("Risk budget contains missing values")
+    if (np.array(riskbudgets) < 0).sum() > 0:
+        raise ValueError("Risk budget contains negative values")
     if n != len(riskbudgets):
         raise ValueError("Risk budget size is not equal to the number of asset.")
     if all(v < RISK_BUDGET_TOL for v in riskbudgets):
