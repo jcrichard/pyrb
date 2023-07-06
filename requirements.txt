@@ -1,4 +1,4 @@
 numba==0.51.0
 quadprog==0.1.7
-scipy==1.4.1
+scipy==1.10.0
 llvmlite==0.34.0
